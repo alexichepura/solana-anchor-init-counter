@@ -1,5 +1,6 @@
 import * as anchor from "@project-serum/anchor";
 import { Program } from "@project-serum/anchor";
+import * as assert from "assert";
 import { SolanaAnchorInit } from "../target/types/solana_anchor_init";
 const { SystemProgram } = anchor.web3;
 const { BN } = anchor;
@@ -21,5 +22,17 @@ describe("solana-anchor-init", () => {
       },
       signers: [counter],
     });
+  });
+
+  it("Increments a coutner", async () => {
+    await program.rpc.increment({
+      accounts: {
+        counter: counter.publicKey,
+        authority: provider.wallet.publicKey,
+      },
+    });
+    const account = await program.account.counter.fetch(counter.publicKey);
+    assert.ok(account.count.toNumber() === 1);
+    assert.ok(account.authority.equals(provider.wallet.publicKey));
   });
 });
