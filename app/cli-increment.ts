@@ -1,20 +1,27 @@
 import * as anchor from "@project-serum/anchor"
 import { Program } from "@project-serum/anchor"
+import dotenv from "dotenv"
 import { SolanaAnchorInit } from "../target/types/solana_anchor_init"
-// const { SystemProgram } = anchor.web3
-// const { BN } = anchor
+dotenv.config()
 type TCounterProgram = Program<SolanaAnchorInit>
 
 const provider = anchor.Provider.env()
 anchor.setProvider(provider)
 const program = anchor.workspace.SolanaAnchorInit as TCounterProgram
-const counter = anchor.web3.Keypair.generate()
+const authorityPublicKey = provider.wallet.publicKey
+
+const counterKeypair = anchor.web3.Keypair.fromSecretKey(
+  Buffer.from(JSON.parse(process.env.COUNTER_PROGRAM_SECRET))
+)
+const counterKeypairPublicKey = counterKeypair.publicKey
+
+console.log("increment", counterKeypairPublicKey.toBase58(), authorityPublicKey.toBase58())
 
 const increment = async () => {
   await program.rpc.increment({
     accounts: {
-      counter: counter.publicKey,
-      authority: provider.wallet.publicKey,
+      counter: counterKeypairPublicKey,
+      authority: authorityPublicKey,
     },
   })
 }
